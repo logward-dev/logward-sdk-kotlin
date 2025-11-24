@@ -8,6 +8,17 @@ import io.ktor.server.response.*
 import io.ktor.util.*
 
 /**
+ * AttributeKey to access the LogWard client instance
+ *
+ * Use this to manually log messages from your routes:
+ * ```kotlin
+ * val client = call.application.attributes[LogWardClientKey]
+ * client.info("my-service", "Custom log message")
+ * ```
+ */
+val LogWardClientKey = AttributeKey<LogWardClient>("LogWardClient")
+
+/**
  * Ktor plugin for automatic HTTP request/response logging
  *
  * Example usage:
@@ -17,6 +28,15 @@ import io.ktor.util.*
  *         apiUrl = "http://localhost:8080"
  *         apiKey = "lp_your_key"
  *         serviceName = "ktor-app"
+ *     }
+ *
+ *     // Access the client manually in your routes
+ *     routing {
+ *         get("/api/custom") {
+ *             val client = call.application.attributes[LogWardClientKey]
+ *             client.info("my-service", "Custom log message")
+ *             call.respondText("OK")
+ *         }
  *     }
  * }
  * ```
@@ -56,7 +76,31 @@ val LogWardPlugin = createApplicationPlugin(
     createConfiguration = ::LogWardPluginConfig
 ) {
     val config = pluginConfig
+
+    // Log plugin installation
+    println("╭────────────────────────────────────────────╮")
+    println("│  LogWard Plugin Initialized                │")
+    println("╰────────────────────────────────────────────╯")
+    println("  Service Name: ${config.serviceName}")
+    println("  API URL: ${config.apiUrl}")
+    println("  Batch Size: ${config.batchSize}")
+    println("  Flush Interval: ${config.flushInterval}")
+    println("  Log Requests: ${config.logRequests}")
+    println("  Log Responses: ${config.logResponses}")
+    println("  Log Errors: ${config.logErrors}")
+    println("  Skip Health Check: ${config.skipHealthCheck}")
+    if (config.skipPaths.isNotEmpty()) {
+        println("  Skip Paths: ${config.skipPaths.joinToString(", ")}")
+    }
+    println()
+
     val client = LogWardClient(config.toClientOptions())
+    println("✓ LogWard client created and ready")
+    println("✓ Access client manually via: call.application.attributes[LogWardClientKey]")
+    println()
+
+    // Store client in application attributes for manual access
+    application.attributes.put(LogWardClientKey, client)
 
     onCall { call ->
         val startTime = System.currentTimeMillis()

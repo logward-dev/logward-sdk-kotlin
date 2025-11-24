@@ -33,6 +33,22 @@ class LogWardFilter(
     private val skipPaths: Set<String> = emptySet()
 ) : Filter {
 
+    init {
+        println("╭────────────────────────────────────────────╮")
+        println("│  LogWard Filter Initialized                │")
+        println("╰────────────────────────────────────────────╯")
+        println("  Service Name: $serviceName")
+        println("  Log Requests: $logRequests")
+        println("  Log Responses: $logResponses")
+        println("  Log Errors: $logErrors")
+        println("  Skip Health Check: $skipHealthCheck")
+        if (skipPaths.isNotEmpty()) {
+            println("  Skip Paths: ${skipPaths.joinToString(", ")}")
+        }
+        println("✓ Jakarta Servlet filter ready for HTTP logging")
+        println()
+    }
+
     companion object {
         private const val START_TIME_ATTR = "logward.startTime"
         private const val TRACE_ID_HEADER = "X-Trace-ID"

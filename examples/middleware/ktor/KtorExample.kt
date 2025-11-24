@@ -1,6 +1,7 @@
 package dev.logward.sdk.examples.middleware.ktor
 
 import dev.logward.sdk.middleware.LogWardPlugin
+import dev.logward.sdk.middleware.LogWardClientKey
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
@@ -11,8 +12,9 @@ import io.ktor.http.*
 /**
  * Example of using LogWard with Ktor
  *
- * This example demonstrates how to install and configure the LogWardPlugin
- * for automatic HTTP request/response logging in a Ktor application.
+ * This example demonstrates:
+ * 1. How to install and configure the LogWardPlugin for automatic HTTP logging
+ * 2. How to access the LogWard client manually in your routes for custom logging
  */
 fun main() {
     embeddedServer(Netty, port = 8080) {
@@ -65,6 +67,51 @@ fun main() {
             get("/health") {
                 // This will be skipped by LogWard (skipHealthCheck = true)
                 call.respond(HttpStatusCode.OK, mapOf("status" to "healthy"))
+            }
+
+            get("/api/custom-log") {
+                // Access the LogWard client manually for custom logging
+                val client = call.application.attributes[LogWardClientKey]
+
+                // Log custom messages with your own metadata
+                client.info(
+                    "custom-service",
+                    "Processing custom business logic",
+                    mapOf(
+                        "userId" to 12345,
+                        "action" to "custom_operation",
+                        "timestamp" to System.currentTimeMillis()
+                    )
+                )
+
+                // Simulate some work
+                Thread.sleep(100)
+
+                client.info(
+                    "custom-service",
+                    "Custom operation completed successfully",
+                    mapOf("duration" to 100, "status" to "success")
+                )
+
+                call.respond(HttpStatusCode.OK, mapOf(
+                    "message" to "Custom operation completed",
+                    "logged" to true
+                ))
+            }
+
+            get("/api/manual-trace") {
+                // Use the client with trace ID for distributed tracing
+                val client = call.application.attributes[LogWardClientKey]
+
+                client.withTraceId("trace-${System.currentTimeMillis()}") {
+                    client.info("trace-service", "Starting traced operation")
+                    Thread.sleep(50)
+                    client.info("trace-service", "Operation step 1 completed")
+                    Thread.sleep(50)
+                    client.info("trace-service", "Operation step 2 completed")
+                }
+
+                call.respond(HttpStatusCode.OK, mapOf("traced" to true))
             }
         }
     }.start(wait = true)

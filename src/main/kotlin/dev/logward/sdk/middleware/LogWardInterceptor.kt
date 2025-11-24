@@ -31,6 +31,22 @@ class LogWardInterceptor(
     private val skipPaths: Set<String> = emptySet()
 ) : HandlerInterceptor {
 
+    init {
+        println("╭────────────────────────────────────────────╮")
+        println("│  LogWard Interceptor Initialized          │")
+        println("╰────────────────────────────────────────────╯")
+        println("  Service Name: $serviceName")
+        println("  Log Requests: $logRequests")
+        println("  Log Responses: $logResponses")
+        println("  Log Errors: $logErrors")
+        println("  Skip Health Check: $skipHealthCheck")
+        if (skipPaths.isNotEmpty()) {
+            println("  Skip Paths: ${skipPaths.joinToString(", ")}")
+        }
+        println("✓ Spring Boot interceptor ready for HTTP logging")
+        println()
+    }
+
     companion object {
         private const val START_TIME_ATTR = "logward.startTime"
         private const val TRACE_ID_HEADER = "X-Trace-ID"

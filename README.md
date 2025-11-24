@@ -354,6 +354,30 @@ fun Application.module() {
 
 **See full example:** [examples/middleware/ktor/KtorExample.kt](examples/middleware/ktor/KtorExample.kt)
 
+#### Accessing the Client Manually in Ktor
+
+You can access the LogWard client directly in your routes for custom logging:
+
+```kotlin
+import dev.logward.sdk.middleware.LogWardClientKey
+
+routing {
+    get("/api/custom") {
+        // Get the client from application attributes
+        val client = call.application.attributes[LogWardClientKey]
+
+        // Log custom messages
+        client.info(
+            "my-service",
+            "Custom business logic executed",
+            mapOf("userId" to 123, "action" to "custom_operation")
+        )
+
+        call.respondText("OK")
+    }
+}
+```
+
 ### Spring Boot Interceptor
 
 Automatically log HTTP requests and responses in Spring Boot applications.
