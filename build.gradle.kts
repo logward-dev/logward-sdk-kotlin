@@ -41,6 +41,19 @@ dependencies {
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
     testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
     testImplementation("io.mockk:mockk:1.13.8")
+
+    // Logging for tests (required since slf4j-api is compileOnly)
+    testImplementation("org.slf4j:slf4j-api:2.0.9")
+    testImplementation("org.slf4j:slf4j-simple:2.0.9")
+
+    // Framework testing dependencies
+    testImplementation("io.ktor:ktor-server-test-host:2.3.7")
+    testImplementation("io.ktor:ktor-server-content-negotiation:2.3.7")
+    testImplementation("io.ktor:ktor-serialization-kotlinx-json:2.3.7")
+    testImplementation("org.springframework:spring-test:6.1.1")
+    testImplementation("org.springframework:spring-webmvc:6.1.1")
+    testImplementation("org.springframework.boot:spring-boot-test:3.2.0")
+    testImplementation("jakarta.servlet:jakarta.servlet-api:6.0.0")
 }
 
 tasks.withType<KotlinCompile> {
