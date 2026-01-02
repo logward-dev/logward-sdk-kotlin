@@ -17,6 +17,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.sse.EventSource
 import okhttp3.sse.EventSourceListener
 import okhttp3.sse.EventSources
+import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.util.*
 import java.util.concurrent.*
@@ -30,6 +31,7 @@ import kotlin.math.pow
  * retry logic, circuit breaker, and query capabilities.
  */
 class LogWardClient(private val options: LogWardClientOptions) {
+    private val logger = LoggerFactory.getLogger(LogWardClient::class.java)
     
     private val httpClient: OkHttpClient = OkHttpClient.Builder()
         .connectTimeout(10, TimeUnit.SECONDS)
@@ -85,7 +87,7 @@ class LogWardClient(private val options: LogWardClientOptions) {
         })
         
         if (options.debug) {
-            println("[LogWard] Client initialized with apiUrl=${options.apiUrl}")
+            logger.debug("Client initialized with apiUrl={}", options.apiUrl)
         }
     }
     
@@ -203,7 +205,7 @@ class LogWardClient(private val options: LogWardClientOptions) {
                 }
             }
             if (options.debug) {
-                println("[LogWard] Buffer full, dropping log: ${entry.message}")
+                logger.debug("Buffer full, dropping log: ${entry.message}")
             }
             throw BufferFullException()
         }
@@ -283,7 +285,7 @@ class LogWardClient(private val options: LogWardClientOptions) {
         }
         
         if (options.debug) {
-            println("[LogWard] Flushing ${logsToSend.size} logs...")
+            logger.debug("Flushing ${logsToSend.size} logs...")
         }
         
         // Check circuit breaker
@@ -294,7 +296,7 @@ class LogWardClient(private val options: LogWardClientOptions) {
                 }
             }
             if (options.debug) {
-                println("[LogWard] Circuit breaker is OPEN, skipping flush")
+                logger.debug("Circuit breaker is OPEN, skipping flush")
             }
             throw CircuitBreakerOpenException()
         }
@@ -326,7 +328,7 @@ class LogWardClient(private val options: LogWardClientOptions) {
                 }
                 
                 if (options.debug) {
-                    println("[LogWard] Successfully sent ${logsToSend.size} logs in ${latency}ms")
+                    logger.debug("Successfully sent ${logsToSend.size} logs in ${latency}ms")
                 }
                 
                 return
@@ -344,7 +346,7 @@ class LogWardClient(private val options: LogWardClientOptions) {
                 if (attempt < options.maxRetries) {
                     val delayMs = options.retryDelay.inWholeMilliseconds * (2.0.pow(attempt.toDouble())).toLong()
                     if (options.debug) {
-                        println("[LogWard] Attempt ${attempt + 1} failed: ${e.message}. Retrying in ${delayMs}ms...")
+                        logger.error("Attempt ${attempt + 1} failed: ${e.message}. Retrying in ${delayMs}ms...")
                     }
                     delay(delayMs)
                     attempt++
@@ -356,7 +358,7 @@ class LogWardClient(private val options: LogWardClientOptions) {
         
         // All retries failed
         if (options.debug) {
-            println("[LogWard] All retry attempts failed: ${lastError?.message}")
+            logger.error("All retry attempts failed: ${lastError?.message}")
         }
         
         if (circuitBreaker.getState() == CircuitState.OPEN && options.enableMetrics) {
@@ -529,7 +531,7 @@ class LogWardClient(private val options: LogWardClientOptions) {
      */
     suspend fun close() {
         if (options.debug) {
-            println("[LogWard] Closing client...")
+            logger.debug("Closing client...")
         }
         
         flush()
@@ -553,7 +555,7 @@ class LogWardClient(private val options: LogWardClientOptions) {
             traceId
         } else {
             if (options.debug) {
-                println("[LogWard] Invalid trace ID '$traceId', generating new UUID")
+                logger.error("Invalid trace ID '$traceId', generating new UUID")
             }
             UUID.randomUUID().toString()
         }
